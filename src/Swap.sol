@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { UniversalRouter } from "@uniswap/universal-router/contracts/UniversalRouter.sol";
 import { IPermit2 } from "@uniswap/permit2/src/interfaces/IPermit2.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20 } from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
 contract Swap{
 UniversalRouter public  immutable universalRouter;
 IERC20 public immutable ierc20;

@@ -71,15 +71,26 @@ contract V4Test is Test, DeployPermit2{
      uint128 amount1Max = 110;
      bytes memory hookData = bytes("");
     uint128 liq = v4.getLiquidityForAmount(sqrtStartPriceX96, sqrtPriceAX96, sqrtPriceBX96, amount0, amount1);
-
+    uint nextTokenID = v4.getNextTokenId();
+    console.log("nextTokenID before creating pool: ",nextTokenID);
      v4.createPool(currency0,currency1,lpFee,tickSpacing,hookContract,sqrtStartPriceX96);
-     v4.mintPosition(currency0, currency1,lpFee,tickSpacing,hookContract,liq, amount0Max, amount1Max, hookData, permit2);
-
+     nextTokenID = v4.getNextTokenId();
+     console.log("nextTokenID after creating pool but before mint: ",nextTokenID);
+    v4.mintPosition(currency0, currency1,lpFee,tickSpacing,hookContract,liq, amount0Max, amount1Max, hookData, permit2);
+     nextTokenID = v4.getNextTokenId();
+     console.log("nextTokenID after mint: ",nextTokenID);
+     uint currentTokenId = v4.getTokenId(0);
+     console.log("tokenId of position: ",currentTokenId);
      //getting contract balance after minting position
      uint balance = v4.contractBalance(DAI);
      uint balance1 = v4.contractBalance(USDC);
      console.log("balance of DAI: ",balance);
      console.log("balance of USDC: ",balance1);
+     console.log("liquidity of pool before increase: ",v4.getLiquidityOfPool(currentTokenId));
+     //v4.increaseLiquidityDefault(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); // increasing liquidity(default)
+     v4.increaseLiquidityAndCollectFee(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); //increasing liquidity and collecting fee
+    // v4.increaseLiquidityAndIgnoreDust(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); //increasing liquidity and ignoring dust
+     console.log("liquidity of pool after increase: ",v4.getLiquidityOfPool(currentTokenId));
      assertTrue(true);
  }
 

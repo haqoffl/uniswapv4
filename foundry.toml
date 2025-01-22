@@ -10,6 +10,6 @@ solc_version = "0.8.24"
 auto_detect_solc = true
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
-rpc_url="https://unichain-sepolia.g.alchemy.com/v2/"
+rpc_url="https://unichain-sepolia.g.alchemy.com/v2/YOUR_KEY"
 [profile.env]
-UNI_SEPOLIA_RPC_URL="https://unichain-sepolia.g.alchemy.com/v2/"
+UNI_SEPOLIA_RPC_URL="https://unichain-sepolia.g.alchemy.com/v2/YOUR_KEY"

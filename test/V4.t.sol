@@ -6,6 +6,8 @@ import {V4} from "../src/V4.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {IERC20} from  "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
+import {PoolKey,Currency} from "v4-core/src/types/PoolKey.sol";
+import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 
 contract V4Test is Test, DeployPermit2{
     V4 public v4;
@@ -17,6 +19,9 @@ contract V4Test is Test, DeployPermit2{
     address public contractAddress;
     address public john;
     address public permit2;
+    address payable public  _router = payable(0xf70536B3bcC1bD1a972dc186A2cf84cC6da6Be5D);
+    address public _poolManager = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
+
     function setUp() public{
         string memory rpcUrl = vm.envString("UNI_SEPOLIA_RPC_URL");
         uint256 forkId = vm.createFork(rpcUrl);
@@ -25,7 +30,7 @@ contract V4Test is Test, DeployPermit2{
         DAI_HOLDER = 0xF1D9236cf239C58384405cD79bA8775A242B420d;
         USDC_HOLDER = 0xca8cA8840c77589981E63f4D8122fFEc4b74e2a1;
         vm.prank(john);
-        v4 = new V4(_psm);
+        v4 = new V4(_psm,_router,_poolManager,permit2);
         contractAddress = address(v4);
         console.log("address of contract: ",address(v4));
         permit2 = deployPermit2();
@@ -76,7 +81,7 @@ contract V4Test is Test, DeployPermit2{
      v4.createPool(currency0,currency1,lpFee,tickSpacing,hookContract,sqrtStartPriceX96);
      nextTokenID = v4.getNextTokenId();
      console.log("nextTokenID after creating pool but before mint: ",nextTokenID);
-    v4.mintPosition(currency0, currency1,lpFee,tickSpacing,hookContract,liq, amount0Max, amount1Max, hookData, permit2);
+    v4.mintPosition(currency0, currency1,lpFee,tickSpacing,hookContract,liq, amount0Max, amount1Max, hookData,permit2);
      nextTokenID = v4.getNextTokenId();
      console.log("nextTokenID after mint: ",nextTokenID);
      uint currentTokenId = v4.getTokenId(0);
@@ -86,11 +91,37 @@ contract V4Test is Test, DeployPermit2{
      uint balance1 = v4.contractBalance(USDC);
      console.log("balance of DAI: ",balance);
      console.log("balance of USDC: ",balance1);
+     console.log("liq: ",liq);
      console.log("liquidity of pool before increase: ",v4.getLiquidityOfPool(currentTokenId));
      //v4.increaseLiquidityDefault(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); // increasing liquidity(default)
      v4.increaseLiquidityAndCollectFee(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); //increasing liquidity and collecting fee
     // v4.increaseLiquidityAndIgnoreDust(currency0, currency1,currentTokenId,liq, amount0Max, amount1Max, hookData); //increasing liquidity and ignoring dust
      console.log("liquidity of pool after increase: ",v4.getLiquidityOfPool(currentTokenId));
+     console.log("balance of DAI",v4.contractBalance(DAI));
+     console.log("balance of USDC",v4.contractBalance(USDC));
+   //  v4.decreaseLiquidityAndCollectFee(currency0,currency1,currentTokenId,liq,0,0, hookData);
+   v4.decreaseLiquidity(currency0, currency1,currentTokenId,liq,0,0,50,50,hookData);
+    console.log("liquidity of pool after decrease: ",v4.getLiquidityOfPool(currentTokenId));
+     console.log("balance of DAI",v4.contractBalance(DAI));
+     console.log("balance of USDC",v4.contractBalance(USDC));
+  
+
+     PoolKey memory key = PoolKey({
+    currency0: Currency.wrap(currency0),
+    currency1: Currency.wrap(currency1),
+    fee: lpFee,
+    tickSpacing: tickSpacing,
+    hooks: IHooks(hookContract)
+    });
+
+
+    uint128 amountIn = 100;
+    uint128 minAmountOut = 100;
+    console.log("balance of DAI before swap",v4.contractBalance(DAI));
+     console.log("balance of USDC before swap",v4.contractBalance(USDC));
+     v4.ExactInputSwapSingle(currency0,currency1,50,50,60,key,2,0,permit2);
+    console.log("balance of DAI after swap",v4.contractBalance(DAI));
+     console.log("balance of USDC after swap",v4.contractBalance(USDC));
      assertTrue(true);
  }
 

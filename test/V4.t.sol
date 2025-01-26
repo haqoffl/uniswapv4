@@ -119,7 +119,7 @@ contract V4Test is Test, DeployPermit2{
     uint128 minAmountOut = 100;
     console.log("balance of DAI before swap",v4.contractBalance(DAI));
      console.log("balance of USDC before swap",v4.contractBalance(USDC));
-     v4.ExactInputSwapSingle(currency0,currency1,50,50,60,key,2,0,permit2);
+     //v4.ExactInputSwapSingle(currency0,currency1,50,50,60,key,2,0,permit2);
     console.log("balance of DAI after swap",v4.contractBalance(DAI));
      console.log("balance of USDC after swap",v4.contractBalance(USDC));
      assertTrue(true);

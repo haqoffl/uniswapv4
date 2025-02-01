@@ -63,7 +63,7 @@ function getHookPermissions()  public pure override returns (Hooks.Permissions m
     movingAverageGasPriceCount++;
 }
 
-function getFee() internal view returns (uint24) {
+function getFee() public view returns (uint24) {
     uint128 gasPrice = uint128(tx.gasprice);
 
     // if gasPrice > movingAverageGasPrice * 1.1, then half the fees

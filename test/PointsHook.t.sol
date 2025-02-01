@@ -115,3 +115,24 @@ function testAddLiquidityAndSwap() public{
 }
 
 }
+
+
+/*
+steps to create Hooks
+
+1. inherit Base Hook
+2. import hook contract
+3. Need for Pool Manager to initiate Base Hook contract via constructor
+4. get Hook Permissions
+5. structurize your contract according to need like beforeSwap,afterSwap, beforeInitialize etc..
+6. import Pool key for using as an parameter for beforeSwap,afterSwap so on..
+7. according to need, import the libraries
+
+
+steps to test hook contract
+
+import {test,console} library from forge-std/Test.sol;
+import IpoolManager and PoolManager
+import deployer from v4-core/test/utils/Deployers.sol
+
+ */

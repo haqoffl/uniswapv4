@@ -25,6 +25,7 @@ using PoolIdLibrary for PoolKey;
 mapping(PoolId poolId =>mapping(int24 tickToSellAt => mapping(bool zeroForOne => uint256 inputAmount))) public pendingOrders;
 mapping(uint256 positionId => uint256 claimsSupply)public claimTokensSupply;
 mapping(uint256 positionId => uint256 outputClaimable)public claimableOutputTokens;
+mapping(PoolId poolId=>int24 lastTick) public lastTicks;
 
 error InvalidOrder();
 error NothingToClaim();
@@ -55,13 +56,60 @@ function getHookPermissions()  public pure override returns (Hooks.Permissions m
 }
 
 function afterInitialize(address, PoolKey calldata key,uint160,int24 tick) external override onlyPoolManager returns (bytes4) {
-
+        lastTicks[key.toId()] = tick;
         return this.afterInitialize.selector;
     }
 
-  function afterSwap(address, PoolKey calldata, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)external override onlyPoolManager returns (bytes4, int128){
+  function afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata params, BalanceDelta, bytes calldata)external override onlyPoolManager returns (bytes4, int128){
+            if(address(this) == msg.sender) return (this.afterSwap.selector, 0);
+            bool tryMore = true;
+            int24 currentTick = 0;
+            while(tryMore){
+                (tryMore, currentTick) = tryExecutingOrders(key,!params.zeroForOne);
+            }
+
+             lastTicks[key.toId()] = currentTick;
             return (this.afterSwap.selector, 0);
         }
+
+ function tryExecutingOrders(PoolKey calldata key, bool executeZeroForOne) internal returns (bool tryMore, int24 newTick) {
+    (, int24 currentTick, , ) = poolManager.getSlot0(key.toId());
+    int24 lastTick = lastTicks[key.toId()];
+     if (currentTick > lastTick) {
+        for (
+            int24 tick = lastTick;
+            tick <= currentTick;
+            tick += key.tickSpacing
+        ) {
+            uint256 inputAmount = pendingOrders[key.toId()][tick][
+                executeZeroForOne
+            ];
+            if (inputAmount > 0) {
+                executeOrder(key, tick, executeZeroForOne, inputAmount);
+
+                return (true, currentTick);
+            }
+        }
+    }
+
+    else {
+        for (
+            int24 tick = lastTick;
+            tick >= currentTick;
+            tick -= key.tickSpacing
+        ) {
+            uint256 inputAmount = pendingOrders[key.toId()][tick][
+                executeZeroForOne
+            ];
+            if (inputAmount > 0) {
+                executeOrder(key, tick, executeZeroForOne, inputAmount);
+                return (true, currentTick);
+            }
+        }
+    }
+
+    return (false, currentTick);
+}
 
         function getLowerUsableTick(
     int24 tick,

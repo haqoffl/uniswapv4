@@ -110,36 +110,22 @@ function onERC1155BatchReceived(
 }
 
 function test_placeOrder() public {
-    // Place a zeroForOne take-profit order
-    // for 10e18 token0 tokens
-    // at tick 100
+
     int24 tick = 100;
     uint256 amount = 10e18;
     bool zeroForOne = true;
 
-    // Note the original balance of token0 we have
     uint256 originalBalance = currency0.balanceOfSelf();
 
-    // Place the order
     int24 tickLower = hook.placeOrder(key, tick, zeroForOne, amount);
 
-    // Note the new balance of token0 we have
     uint256 newBalance = currency0.balanceOfSelf();
-
-    // Since we deployed the pool contract with tick spacing = 60
-    // i.e. the tick can only be a multiple of 60
-    // the tickLower should be 60 since we placed an order at tick 100
     assertEq(tickLower, 60);
-
-    // Ensure that our balance of token0 was reduced by `amount` tokens
     assertEq(originalBalance - newBalance, amount);
 
-    // Check the balance of ERC-1155 tokens we received
     uint256 positionId = hook.getPositionId(key, tickLower, zeroForOne);
     uint256 tokenBalance = hook.balanceOf(address(this), positionId);
 
-    // Ensure that we were, in fact, given ERC-1155 tokens for the order
-    // equal to the `amount` of token0 tokens we placed the order for
     assertTrue(positionId != 0);
     assertEq(tokenBalance, amount);
 }
@@ -155,10 +141,36 @@ function test_cancelOrder() public{
     console.log("total claim of token in position",hook.claimTokensSupply(positionId));
     assertEq(hook.claimTokensSupply(positionId),inputAmount);
     console.log("positionId: ",positionId);
-
-    //cancel the order
     hook.cancelOrder(key,100,true,inputAmount);
     console.log("total claim of token in position",hook.claimTokensSupply(positionId));
      assertEq(hook.claimTokensSupply(positionId),0);
 }
+
+
+function test_multiple_orderExecute_zeroForOne_onlyOne() public {
+    PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+        .TestSettings({takeClaims: false, settleUsingBurn: false});
+
+    uint256 amount = 0.01 ether;
+
+    hook.placeOrder(key, 0, true, amount);
+    hook.placeOrder(key, 60, true, amount);
+
+    (, int24 currentTick, , ) = manager.getSlot0(key.toId());
+    assertEq(currentTick, 0);
+
+    IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+        zeroForOne: false,
+        amountSpecified: -0.1 ether,
+        sqrtPriceLimitX96: TickMath.MAX_SQRT_PRICE - 1
+    });
+
+    swapRouter.swap(key, params, testSettings, ZERO_BYTES);
+    uint256 tokensLeftToSell = hook.pendingOrders(key.toId(), 0, true);
+    assertEq(tokensLeftToSell, 0);
+
+    tokensLeftToSell = hook.pendingOrders(key.toId(), 60, true);
+    assertEq(tokensLeftToSell, amount);
+}
+
 }

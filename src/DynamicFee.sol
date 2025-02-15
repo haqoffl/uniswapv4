@@ -44,7 +44,7 @@ function getHookPermissions()  public pure override returns (Hooks.Permissions m
     function beforeSwap(address, PoolKey calldata, IPoolManager.SwapParams calldata, bytes calldata) external override returns (bytes4, BeforeSwapDelta, uint24){
         uint24 fee = getFee();
         uint24 feeWithFlag = fee | LPFeeLibrary.OVERRIDE_FEE_FLAG;
-        return (this.beforeSwap.selector,BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
+        return (this.beforeSwap.selector,BeforeSwapDeltaLibrary.ZERO_DELTA, feeWithFlag);
     }
 
      function afterSwap(address, PoolKey calldata, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)external override returns (bytes4, int128){
@@ -78,4 +78,5 @@ function getFee() public view returns (uint24) {
 
     return BASE_FEE;
 }
+
 }

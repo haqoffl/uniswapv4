@@ -136,3 +136,13 @@ import IpoolManager and PoolManager
 import deployer from v4-core/test/utils/Deployers.sol
 
  */
+
+ // pm.unlock()
+
+// callback pm.take()
+
+// pm.sync()
+
+// token.transfer(pm)
+
+// pm.settle()

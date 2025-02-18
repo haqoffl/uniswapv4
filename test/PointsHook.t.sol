@@ -28,6 +28,7 @@ function setUp() public{
     //Deploy our erc20 token
     token = new MockERC20("$TRUMP", "TRP", 18);
     tokenCurrency = Currency.wrap(address(token));
+    
     //minting token to this address
     token.mint(address(this),1000 ether);
     // Deploy hook to an address that has the proper flags set

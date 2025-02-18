@@ -12,6 +12,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
 import {Currency, CurrencyLibrary} from "v4-core/src/types/Currency.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
+import {PoolSwapTest} from "v4-core/src/test/PoolSwapTest.sol";
 
 contract TakeProfitHookTest is Test,Deployers {
 
